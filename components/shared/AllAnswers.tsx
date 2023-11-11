@@ -25,6 +25,8 @@ const AllAnswers = async ({ questionId }: Props) => {
           upvotes={answer.upvotes.length}
           downvotes={answer.downvotes.length}
           author={answer.author}
+          hasUpVoted={answer.upvotes.includes(answer.author._id)}
+          hasDownVoted={answer.downvotes.includes(answer.author._id)}
         />
       ))}
     </div>

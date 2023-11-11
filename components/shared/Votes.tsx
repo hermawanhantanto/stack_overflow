@@ -7,6 +7,8 @@ import {
   upvoteQuestion,
 } from "@/lib/actions/question.action";
 import { usePathname } from "next/navigation";
+import { toast } from "../ui/use-toast";
+import { downvoteAnswer, upvoteAnswer } from "@/lib/actions/answer.action";
 
 interface Props {
   type: string;
@@ -35,24 +37,61 @@ const Votes = ({
   };
   const handleVote = async (action: string) => {
     try {
-      if (action === "upvote") {
-        await upvoteQuestion({
-          questionId: JSON.parse(itemId),
-          userId: JSON.parse(userId),
-          hasupVoted: hasUpVoted,
-          hasdownVoted: hasDownVoted,
-          path: pathname,
-        });
+      if (type === "question" && userId) {
+        if (action === "upvote") {
+          await upvoteQuestion({
+            questionId: JSON.parse(itemId),
+            userId: JSON.parse(userId),
+            hasupVoted: hasUpVoted,
+            hasdownVoted: hasDownVoted,
+            path: pathname,
+          });
+          return toast({
+            title: "Success upvote the question",
+          });
+        }
+        if (action === "downvote") {
+          await downvoteQuestion({
+            questionId: JSON.parse(itemId),
+            userId: JSON.parse(userId),
+            hasupVoted: hasUpVoted,
+            hasdownVoted: hasDownVoted,
+            path: pathname,
+          });
+          return toast({
+            title: "Success downvote the question",
+          });
+        }
       }
-      if (action === "downvote") {
-        await downvoteQuestion({
-          questionId: JSON.parse(itemId),
-          userId: JSON.parse(userId),
-          hasupVoted: hasUpVoted,
-          hasdownVoted: hasDownVoted,
-          path: pathname,
-        });
+      if (type === "answer" && userId) {
+        if (action === "upvote") {
+          await upvoteAnswer({
+            answerId: JSON.parse(itemId),
+            userId: JSON.parse(userId),
+            hasupVoted: hasUpVoted,
+            hasdownVoted: hasDownVoted,
+            path: pathname,
+          });
+          return toast({
+            title: "Success upvote the answer",
+          });
+        }
+        if (action === "downvote") {
+          await downvoteAnswer({
+            answerId: JSON.parse(itemId),
+            userId: JSON.parse(userId),
+            hasupVoted: hasUpVoted,
+            hasdownVoted: hasDownVoted,
+            path: pathname,
+          });
+          return toast({
+            title: "Success downvote the answer",
+          });
+        }
       }
+      return toast({
+        title: "You need to login to vote",
+      });
     } catch (error) {
       console.log(error);
     }
