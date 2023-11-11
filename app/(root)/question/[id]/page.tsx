@@ -2,9 +2,13 @@ import Answer from "@/components/forms/Answer";
 import Metric from "@/components/shared/Metric";
 import NoResult from "@/components/shared/NoResult";
 import ParseHTML from "@/components/shared/ParseHTML";
+import RenderAnswer from "@/components/shared/RenderAnswer";
 import RenderTag from "@/components/shared/RenderTag";
+import { getAllAnswers } from "@/lib/actions/answer.action";
 import { getQuestionById } from "@/lib/actions/question.action";
+import { getUserById } from "@/lib/actions/user.action";
 import { formatAndDivideNumber, getTimestamp } from "@/lib/utils";
+import { auth } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -16,7 +20,17 @@ interface Props {
 }
 
 const QuestionDetail = async ({ params }: Props) => {
+  const { userId: clerkId } = auth();
+
+  let user;
+
+  if (clerkId) {
+    user = await getUserById({ userId: clerkId });
+  }
+
   const question = await getQuestionById({ questionId: params.id });
+  const result = await getAllAnswers({ questionId: question._id });
+  console.log(result.answers);
   if (!question)
     return (
       <div>
@@ -83,7 +97,25 @@ const QuestionDetail = async ({ params }: Props) => {
           <RenderTag key={tag.id} _id={tag._id} name={tag.name} />
         ))}
       </div>
-      <Answer />
+      <Answer
+        userId={JSON.stringify(user._id)}
+        questionId={JSON.stringify(question._id)}
+        question={question.content}
+      />
+      <div className="mt-8 flex w-full flex-col gap-12">
+        {result.answers.map((answer) => (
+          <RenderAnswer
+            key={answer._id}
+            _id={answer._id}
+            answer={answer.content}
+            createdAt={answer.createdAt}
+            upvotes={answer.upvotes.length}
+            downvotes={answer.downvotes.length}
+            author={answer.author}
+          />
+        ))}
+      
+      </div>
     </>
   );
 };
