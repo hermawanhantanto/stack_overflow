@@ -2,6 +2,7 @@ import { getTimestamp } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import ParseHTML from "./ParseHTML";
 
 interface Props {
   _id: string;
@@ -25,8 +26,8 @@ const RenderAnswer = ({
   author,
 }: Props) => {
   return (
-    <div className="flex w-full flex-col">
-      <div className="flex flex-col-reverse justify-between gap-2 sm:flex-row sm:items-center">
+    <div className="light-border-2 flex w-full flex-col border-b py-8">
+      <div className="mb-4 flex flex-col-reverse justify-between gap-2 sm:flex-row sm:items-center">
         <Link
           href={`/profile/${author.clerkId}`}
           className="flex items-center gap-2"
@@ -49,10 +50,7 @@ const RenderAnswer = ({
         </Link>
         <div className="self-end">voting</div>
       </div>
-      <p className="paragraph-regular text-dark200_light800 mb-8 mt-4">
-        {answer}
-      </p>
-      <hr className="dark:bg-light-400" />
+      <ParseHTML data={answer} />
     </div>
   );
 };

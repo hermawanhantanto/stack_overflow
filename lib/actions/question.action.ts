@@ -7,9 +7,11 @@ import {
   CreateQuestionParams,
   GetQuestionByIdParams,
   GetQuestionsParams,
+  QuestionVoteParams,
 } from "./shared.types";
 import User from "@/database/user.model";
 import { revalidatePath } from "next/cache";
+import path from "path";
 
 export async function getQuestions(params: GetQuestionsParams) {
   try {
@@ -86,4 +88,77 @@ export async function createQuestion(params: CreateQuestionParams) {
 
     revalidatePath(path);
   } catch (error) {}
+}
+
+export async function upvoteQuestion(params: QuestionVoteParams) {
+  try {
+    connectToDatabase();
+    const { questionId, userId, hasupVoted, hasdownVoted, path } = params;
+
+    let updateQuery = {};
+
+    if (hasupVoted) {
+      updateQuery = { $pull: { upvotes: userId } };
+    } else if (hasdownVoted) {
+      updateQuery = {
+        $pull: { downvotes: userId },
+        $push: { upvotes: userId },
+      };
+    } else {
+      updateQuery = { $addToSet: { upvotes: userId } };
+    }
+
+    const question = await Question.findByIdAndUpdate(
+      { _id: questionId },
+      updateQuery,
+      {
+        new: true,
+      }
+    );
+    if (!question) return;
+
+    revalidatePath(path);
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function downvoteQuestion(params: QuestionVoteParams) {
+  try {
+    connectToDatabase();
+    const { questionId, userId, hasupVoted, hasdownVoted, path } = params;
+    const question = await Question.findById(questionId);
+    if (!question) return;
+
+    if (hasupVoted) {
+      await Question.updateOne(
+        { _id: question._id },
+        { $pull: { upvotes: userId } }
+      );
+      await Question.updateOne(
+        { _id: question._id },
+        { $push: { downvotes: userId } }
+      );
+      return revalidatePath(path);
+    }
+
+    if (hasdownVoted) {
+      await Question.updateOne(
+        { _id: question._id },
+        { $pull: { downvotes: userId } }
+      );
+      return revalidatePath(path);
+    }
+
+    await Question.updateOne(
+      { _id: question._id },
+      { $push: { downvotes: userId } }
+    );
+
+    revalidatePath(path);
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 }

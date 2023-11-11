@@ -1,10 +1,10 @@
 import Answer from "@/components/forms/Answer";
+import AllAnswers from "@/components/shared/AllAnswers";
 import Metric from "@/components/shared/Metric";
 import NoResult from "@/components/shared/NoResult";
 import ParseHTML from "@/components/shared/ParseHTML";
-import RenderAnswer from "@/components/shared/RenderAnswer";
 import RenderTag from "@/components/shared/RenderTag";
-import { getAllAnswers } from "@/lib/actions/answer.action";
+import Votes from "@/components/shared/Votes";
 import { getQuestionById } from "@/lib/actions/question.action";
 import { getUserById } from "@/lib/actions/user.action";
 import { formatAndDivideNumber, getTimestamp } from "@/lib/utils";
@@ -29,8 +29,7 @@ const QuestionDetail = async ({ params }: Props) => {
   }
 
   const question = await getQuestionById({ questionId: params.id });
-  const result = await getAllAnswers({ questionId: question._id });
-  console.log(result.answers);
+
   if (!question)
     return (
       <div>
@@ -63,7 +62,18 @@ const QuestionDetail = async ({ params }: Props) => {
             {question.author.name}
           </p>
         </Link>
-        <div className="max-sm:self-end">Voting</div>
+        <div className="max-sm:self-end">
+          <Votes
+            type="question"
+            itemId={JSON.stringify(question._id)}
+            userId={JSON.stringify(user._id)}
+            upvotes={question.upvotes.length}
+            downvotes={question.downvotes.length}
+            hasUpVoted={question.upvotes.includes(user._id)}
+            hasDownVoted={question.downvotes.includes(user._id)}
+            hasSaved={user.saved.includes(question._id)}
+          />
+        </div>
       </div>
       <h2 className="h2-bold text-dark200_light800 mt-4 capitalize">
         {question.title}
@@ -97,25 +107,12 @@ const QuestionDetail = async ({ params }: Props) => {
           <RenderTag key={tag.id} _id={tag._id} name={tag.name} />
         ))}
       </div>
+      <AllAnswers questionId={JSON.stringify(question._id)} />
       <Answer
         userId={JSON.stringify(user._id)}
         questionId={JSON.stringify(question._id)}
         question={question.content}
       />
-      <div className="mt-8 flex w-full flex-col gap-12">
-        {result.answers.map((answer) => (
-          <RenderAnswer
-            key={answer._id}
-            _id={answer._id}
-            answer={answer.content}
-            createdAt={answer.createdAt}
-            upvotes={answer.upvotes.length}
-            downvotes={answer.downvotes.length}
-            author={answer.author}
-          />
-        ))}
-      
-      </div>
     </>
   );
 };
