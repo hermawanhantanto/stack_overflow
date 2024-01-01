@@ -1,9 +1,10 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { formUrlQueryParams, removeUrlQueryParams } from "@/lib/utils";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
-import React, { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 interface CustomInputProps {
   route: string;
@@ -20,27 +21,35 @@ const LocalSearchbar = ({
   placeholder,
   otherClasses,
 }: CustomInputProps) => {
-  const params = new URLSearchParams();
+  const pathname = usePathname();
   const router = useRouter();
-  const [q, setQ] = useState("");
-
   const searchParams = useSearchParams();
 
-  const handleSearch = () => {
-    if (q === "") {
-      if (searchParams.get("q")) {
-        params.delete("q");
-        const query = params.size ? "?" + params.toString() : "";
-        const href = route + query;
-        router.push(href);
+  const query = searchParams.get("q");
+  const [search, setSearch] = useState(query || "");
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      if (search) {
+        const newUrl = formUrlQueryParams({
+          params: searchParams.toString(),
+          key: "q",
+          value: search,
+        });
+        router.push(newUrl);
+      } else {
+        if (pathname === route) {
+          const newUrl = removeUrlQueryParams({
+            params: searchParams.toString(),
+            keysToRemove: ["q"],
+          });
+          router.push(newUrl);
+        }
       }
-    } else {
-      params.set("q", q);
-      const query = params.size ? "?" + params.toString() : "";
-      const href = route + query;
-      router.push(href);
-    }
-  };
+    }, 300);
+
+    return () => clearTimeout(debounce);
+  }, [search, route, pathname, router, searchParams, query]);
 
   return (
     <div
@@ -53,7 +62,6 @@ const LocalSearchbar = ({
           width={24}
           height={24}
           className="cursor-pointer"
-          onClick={handleSearch}
         />
       )}
 
@@ -62,10 +70,9 @@ const LocalSearchbar = ({
         placeholder={placeholder}
         value={q}
         onChange={(e) => {
-          setQ(e.target.value);
+          setSearch(e.target.value);
         }}
         className="paragraph-regular no-focus placeholder background-light800_darkgradient border-none shadow-none outline-none"
-        onKeyDown={handleSearch}
       />
 
       {iconPosition === "right" && (
