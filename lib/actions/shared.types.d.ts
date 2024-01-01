@@ -43,7 +43,7 @@ export interface RecommendedParams {
 
 export interface ViewQuestionParams {
   questionId: string;
-  userId: string | undefined;
+  userId?: string;
 }
 
 export interface JobFilterParams {
@@ -157,4 +157,10 @@ export interface GetUserStatsParams {
 
 export interface DeleteUserParams {
   clerkId: string;
+}
+
+export interface getQuestionsByUserIdParams {
+  userId: string;
+  page?: number;
+  pageSize?: number;
 }

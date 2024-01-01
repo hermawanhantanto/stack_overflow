@@ -3,6 +3,9 @@ import React from "react";
 import RenderTag from "../shared/RenderTag";
 import Metric from "../shared/Metric";
 import { formatAndDivideNumber, getTimestamp } from "@/lib/utils";
+import { SignedIn, auth } from "@clerk/nextjs";
+import DeleteAction from "../shared/DeleteAction";
+import Image from "next/image";
 
 interface QuestionProps {
   _id: string;
@@ -13,6 +16,7 @@ interface QuestionProps {
   }[];
   author: {
     _id: string;
+    clerkId: string;
     name: string;
     picture: string;
   };
@@ -32,6 +36,7 @@ const QuestionCard = ({
   answers,
   createdAt,
 }: QuestionProps) => {
+  const user = auth();
   return (
     <div className="card-wrapper rounded-[10px] p-9 sm:px-11">
       <div className="flex flex-col-reverse items-start justify-between gap-5 sm:flex-row">
@@ -47,6 +52,21 @@ const QuestionCard = ({
         </div>
 
         {/* If signed in add edit delete actions */}
+        <SignedIn>
+          {user.userId === author.clerkId && (
+            <div className="flex items-center gap-4">
+              <Link href={`/question/edit/${_id}`}>
+                <Image
+                  src="/assets/icons/edit.svg"
+                  width={18}
+                  height={18}
+                  alt="edit"
+                />
+              </Link>
+              <DeleteAction id={JSON.stringify(_id)} type="question" />
+            </div>
+          )}
+        </SignedIn>
       </div>
 
       <div className="mt-3.5 flex flex-wrap gap-2">
@@ -61,7 +81,7 @@ const QuestionCard = ({
           alt="user"
           value={author.name}
           title={` - asked ${getTimestamp(createdAt)}`}
-          href={`/profile/${author._id}`}
+          href={`/profile/${author.clerkId}`}
           isAuthor
           textStyles="body-medium text-dark400_light700"
         />

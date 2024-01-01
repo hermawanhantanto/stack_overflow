@@ -1,14 +1,16 @@
 "use client";
 import Image from "next/image";
-import React from "react";
 import { Button } from "../ui/button";
 import {
   downvoteQuestion,
   upvoteQuestion,
 } from "@/lib/actions/question.action";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "../ui/use-toast";
 import { downvoteAnswer, upvoteAnswer } from "@/lib/actions/answer.action";
+import { saveQuestion } from "@/lib/actions/user.action";
+import { viewQuestion } from "@/lib/actions/interaction.action";
+import { useEffect } from "react";
 
 interface Props {
   type: string;
@@ -32,8 +34,21 @@ const Votes = ({
   hasSaved,
 }: Props) => {
   const pathname = usePathname();
-  const handleSave = () => {
-    console.log("save");
+  const router = useRouter();
+  const handleSave = async () => {
+    try {
+      await saveQuestion({
+        questionId: JSON.parse(itemId),
+        userId: JSON.parse(userId),
+        path: pathname,
+      });
+      toast({
+        title: "Success save the question",
+      });
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   };
   const handleVote = async (action: string) => {
     try {
@@ -96,6 +111,15 @@ const Votes = ({
       console.log(error);
     }
   };
+
+  useEffect(() => {
+    viewQuestion({
+      questionId: JSON.parse(itemId),
+      userId: userId ? JSON.parse(userId) : undefined,
+    });
+    console.log(userId);
+  }, [userId, itemId, router, pathname]);
+
   return (
     <div className="flex items-center gap-2">
       <Button

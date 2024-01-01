@@ -18,17 +18,20 @@ import { Button } from "../ui/button";
 import { QuestionsSchema } from "@/lib/validations";
 import { Badge } from "../ui/badge";
 import Image from "next/image";
-import { createQuestion } from "@/lib/actions/question.action";
+import { createQuestion, editQuestion } from "@/lib/actions/question.action";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "@/context/ThemeProvider";
 
-const type: any = "create";
-
 interface Props {
   mongoUserId: string;
+  title?: string;
+  content?: string;
+  tags?: string[];
+  id?: string;
+  type: string;
 }
 
-const Question = ({ mongoUserId }: Props) => {
+const Question = ({ mongoUserId, title, content, tags, id, type }: Props) => {
   const { mode } = useTheme();
   const editorRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,9 +42,9 @@ const Question = ({ mongoUserId }: Props) => {
   const form = useForm<z.infer<typeof QuestionsSchema>>({
     resolver: zodResolver(QuestionsSchema),
     defaultValues: {
-      title: "",
-      explanation: "",
-      tags: [],
+      title: title || "",
+      explanation: content || "",
+      tags: tags || [],
     },
   });
 
@@ -52,14 +55,23 @@ const Question = ({ mongoUserId }: Props) => {
     try {
       // make an async call to your API -> create a question
       // contain all form data
-
-      await createQuestion({
-        title: values.title,
-        content: values.explanation,
-        tags: values.tags,
-        author: JSON.parse(mongoUserId),
-        path: pathname,
-      });
+      if (type === "edit") {
+        await editQuestion({
+          title: values.title,
+          content: values.explanation,
+          tags: values.tags,
+          questionId: JSON.parse(id!),
+          path: pathname,
+        });
+      } else {
+        await createQuestion({
+          title: values.title,
+          content: values.explanation,
+          tags: values.tags,
+          author: JSON.parse(mongoUserId),
+          path: pathname,
+        });
+      }
 
       // navigate to home page
       router.push("/");
@@ -150,7 +162,7 @@ const Question = ({ mongoUserId }: Props) => {
                   }}
                   onBlur={field.onBlur}
                   onEditorChange={(content) => field.onChange(content)}
-                  initialValue=""
+                  initialValue={field.value}
                   init={{
                     height: 350,
                     menubar: false,

@@ -1,8 +1,8 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
- 
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 export const getTimestamp = (createdAt: Date): string => {
@@ -19,25 +19,25 @@ export const getTimestamp = (createdAt: Date): string => {
 
   if (timeDifference < minute) {
     const seconds = Math.floor(timeDifference / 1000);
-    return `${seconds} ${seconds === 1 ? 'second' : 'seconds'} ago`;
+    return `${seconds} ${seconds === 1 ? "second" : "seconds"} ago`;
   } else if (timeDifference < hour) {
     const minutes = Math.floor(timeDifference / minute);
-    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+    return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
   } else if (timeDifference < day) {
     const hours = Math.floor(timeDifference / hour);
-    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
   } else if (timeDifference < week) {
     const days = Math.floor(timeDifference / day);
-    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+    return `${days} ${days === 1 ? "day" : "days"} ago`;
   } else if (timeDifference < month) {
     const weeks = Math.floor(timeDifference / week);
-    return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+    return `${weeks} ${weeks === 1 ? "week" : "weeks"} ago`;
   } else if (timeDifference < year) {
     const months = Math.floor(timeDifference / month);
-    return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+    return `${months} ${months === 1 ? "month" : "months"} ago`;
   } else {
     const years = Math.floor(timeDifference / year);
-    return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+    return `${years} ${years === 1 ? "year" : "years"} ago`;
   }
 };
 
@@ -52,3 +52,28 @@ export const formatAndDivideNumber = (num: number): string => {
     return num.toString();
   }
 };
+
+export function formatMonthYear(dateString: string): string {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const date = new Date(dateString);
+  const monthIndex = date.getMonth();
+  const year = date.getFullYear();
+
+  const formattedDate = `${months[monthIndex]} ${year}`;
+
+  return formattedDate;
+}

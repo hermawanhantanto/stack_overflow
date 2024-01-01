@@ -1,22 +1,32 @@
 "use server";
-
 import Question from "@/database/question.model";
 import Tag from "@/database/tag.model";
 import { connectToDatabase } from "../mongoose";
 import {
   CreateQuestionParams,
+  DeleteQuestionParams,
+  EditQuestionParams,
   GetQuestionByIdParams,
   GetQuestionsParams,
   QuestionVoteParams,
 } from "./shared.types";
 import User from "@/database/user.model";
 import { revalidatePath } from "next/cache";
+import Answer from "@/database/answer.model";
+import Interaction from "@/database/interaction.model";
 
 export async function getQuestions(params: GetQuestionsParams) {
   try {
     connectToDatabase();
+    const { page, pageSize, searchQuery, filter } = params;
 
-    const questions = await Question.find({})
+    const questions = await Question.find(
+      searchQuery
+        ? {
+            title: { $regex: new RegExp(`${searchQuery}`, `i`) },
+          }
+        : {}
+    )
       .populate({ path: "tags", model: Tag })
       .populate({ path: "author", model: User })
       .sort({ createdAt: -1 });
@@ -156,6 +166,105 @@ export async function downvoteQuestion(params: QuestionVoteParams) {
     );
 
     revalidatePath(path);
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function deleteQuestion(params: DeleteQuestionParams) {
+  try {
+    connectToDatabase();
+
+    const { questionId, path } = params;
+    const question = await Question.findById(questionId);
+    if (!question) throw new Error("Question not found");
+    await Answer.deleteMany({ question: questionId });
+    await Interaction.deleteMany({ question: questionId });
+    const tags = await Tag.find({ questions: { $in: [questionId] } });
+
+    for (const tag of tags) {
+      const existingTag = await Tag.findOneAndUpdate(
+        { name: { $regex: new RegExp(`^${tag.name}$`, "i") } },
+        { $pull: { questions: questionId } }
+      );
+      if (!existingTag.questions) {
+        await Tag.findOneAndDelete({ _id: existingTag._id });
+      }
+    }
+
+    await User.updateMany(
+      { saved: { $in: [questionId] } },
+      { $pull: { saved: questionId } }
+    );
+
+    await Question.findByIdAndDelete({ _id: questionId });
+
+    revalidatePath(path);
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function editQuestion(params: EditQuestionParams) {
+  try {
+    connectToDatabase();
+    const { questionId, title, content, tags, path } = params;
+    const question = await Question.findById(questionId);
+
+    if (!question) throw new Error("Error");
+
+    question.title = title;
+    question.content = content;
+    question.tags = [];
+
+    const existingTags = await Tag.find({ questions: { $in: [questionId] } });
+    for (const tag of existingTags) {
+      const existingTag = await Tag.findOneAndUpdate(
+        {
+          name: { $regex: new RegExp(`^${tag.name}$`, "i") },
+        },
+        {
+          $pull: { questions: questionId },
+        }
+      );
+
+      if (!existingTag.questions) {
+        await Tag.findOneAndDelete({ _id: existingTag._id });
+      }
+    }
+
+    const tagDocuments = [];
+    for (const tag of tags) {
+      const existingTag = await Tag.findOneAndUpdate(
+        { name: { $regex: new RegExp(`^${tag}$`, "i") } },
+        { $setOnInsert: { name: tag }, $push: { questions: question._id } },
+        { upsert: true, new: true }
+      );
+      tagDocuments.push(existingTag._id);
+    }
+
+    question.save();
+    await Question.findByIdAndUpdate(question._id, {
+      $push: { tags: { $each: tagDocuments } },
+    });
+
+    revalidatePath(path);
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function getHotQuestions() {
+  try {
+    connectToDatabase();
+    const questions = await Question.find()
+      .sort({ upvotes: -1, views: -1 })
+      .limit(5);
+
+    return { questions };
   } catch (error) {
     console.log(error);
     throw error;
