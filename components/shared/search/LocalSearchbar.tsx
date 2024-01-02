@@ -38,13 +38,11 @@ const LocalSearchbar = ({
         });
         router.push(newUrl);
       } else {
-        if (pathname === route) {
-          const newUrl = removeUrlQueryParams({
-            params: searchParams.toString(),
-            keysToRemove: ["q"],
-          });
-          router.push(newUrl);
-        }
+        const newUrl = removeUrlQueryParams({
+          params: searchParams.toString(),
+          keysToRemove: ["q"],
+        });
+        router.push(newUrl);
       }
     }, 300);
 
@@ -68,7 +66,7 @@ const LocalSearchbar = ({
       <Input
         type="text"
         placeholder={placeholder}
-        value={q}
+        value={search}
         onChange={(e) => {
           setSearch(e.target.value);
         }}

@@ -16,6 +16,7 @@ import { revalidatePath } from "next/cache";
 import Question from "@/database/question.model";
 import Tag from "@/database/tag.model";
 import Answer from "@/database/answer.model";
+import { FilterQuery } from "mongoose";
 
 export async function getUserById(params: any) {
   try {
@@ -35,8 +36,17 @@ export async function getUserById(params: any) {
 export async function getAllUsers(params: GetAllUsersParams) {
   try {
     connectToDatabase();
-    // const {page = 1, pageSize = 20, searchQuery, filter } = params;
-    const users = await User.find({}).sort({ createdAt: -1 });
+    const { page = 1, pageSize = 20, searchQuery, filter } = params;
+
+    const query: FilterQuery<typeof User> = {};
+    if (searchQuery) {
+      query.$or = [
+        { name: { $regex: new RegExp(searchQuery, `i`) } },
+        { username: { $regex: new RegExp(searchQuery, `i`) } },
+      ];
+    }
+
+    const users = await User.find(query).sort({ createdAt: -1 });
 
     return { users };
   } catch (error) {
@@ -137,10 +147,22 @@ export async function saveQuestion(params: ToggleSaveQuestionParams) {
 export async function getSavedQuestions(params: GetSavedQuestionsParams) {
   try {
     connectToDatabase();
+    const { searchQuery } = params;
     const { clerkId } = params;
-    const user = await User.findOne({ clerkId }).populate({
+    const query: FilterQuery<typeof Question> = {};
+    if (searchQuery) {
+      query.$or = [
+        { title: { $regex: new RegExp(searchQuery, `i`) } },
+        { content: { $regex: new RegExp(searchQuery, `i`) } },
+      ];
+    }
+
+    const user = await User.findOne({clerkId}).populate({
       path: "saved",
-      options: { sort: { createdAt: -1 } },
+      match: query,
+      options: {
+        sort: { createdAt: -1 },
+      },
       populate: [
         { path: "tags", model: Tag, select: "_id name" },
         { path: "author", model: User, select: "_id clerkId name picture" },
@@ -228,4 +250,3 @@ export async function getUserAnswers(params: GetUserStatsParams) {
     throw error;
   }
 }
-

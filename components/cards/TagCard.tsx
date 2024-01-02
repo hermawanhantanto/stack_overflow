@@ -18,11 +18,6 @@ const TagCard = ({ tag }: Props) => {
       <p className="body-semibold text-dark200_light900 background-light800_dark400 line-clamp-1 w-fit px-6 py-2">
         {tag.name}
       </p>
-      <p className="small-regular text-dark300_light700 mt-4">
-        JavaScript, often abbreviated as JS, is a programming language that is
-        one of the core technologies of the World Wide Web, alongside HTML and
-        CSS
-      </p>
       <div className="mt-4 flex items-center gap-2">
         <p className="body-semibold text-primary-500">
           {tag.questions.length}+

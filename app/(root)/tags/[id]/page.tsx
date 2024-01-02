@@ -1,17 +1,20 @@
 import QuestionCard from "@/components/cards/QuestionCard";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { getQuestionsByTagIdParams } from "@/lib/actions/tag.action";
+import { SearchParamsProps } from "@/types";
 import React from "react";
 
 interface Props {
   params: {
     id: string;
   };
+  searchParams: SearchParamsProps;
 }
 
-const Page = async ({ params }: Props) => {
+const Page = async ({ params, searchParams }: Props) => {
   const result = await getQuestionsByTagIdParams({
     tagId: params.id,
+    searchQuery: searchParams.q,
   });
 
   return (

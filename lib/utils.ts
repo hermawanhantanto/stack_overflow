@@ -89,7 +89,7 @@ export const formUrlQueryParams = ({ params, key, value }: UrlQueryParams) => {
   const currentUrl = qs.parse(params);
   currentUrl[key] = value;
 
-  return qs.stringify(
+  return qs.stringifyUrl(
     {
       url: window.location.pathname,
       query: currentUrl,
@@ -113,7 +113,7 @@ export const removeUrlQueryParams = ({
     delete currentUrl[key];
   });
 
-  return qs.stringify(
+  return qs.stringifyUrl(
     {
       url: window.location.pathname,
       query: currentUrl,

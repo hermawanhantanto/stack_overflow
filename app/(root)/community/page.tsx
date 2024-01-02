@@ -4,24 +4,13 @@ import NoResult from "@/components/shared/NoResult";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { UserFilters } from "@/constants/filters";
 import { getAllUsers } from "@/lib/actions/user.action";
+import { SearchParamsProps } from "@/types";
 import React from "react";
 
-const Page = async () => {
-  const result = await getAllUsers({});
-  if (result.users.length === 0)
-    return (
-      <div>
-        <h1 className="h1-bold text-dark300_light700">All Users</h1>
-        <div className="mt-36 flex w-full flex-col items-center justify-center">
-          <NoResult
-            title="No users found"
-            description="Try searching for something else"
-            link="/"
-            linkTitle="Go back home"
-          />
-        </div>
-      </div>
-    );
+const Page = async ({ searchParams }: SearchParamsProps) => {
+  const result = await getAllUsers({
+    searchQuery: searchParams.q,
+  });
   return (
     <section>
       <h1 className="h1-bold text-dark300_light700">All Users</h1>
@@ -39,11 +28,25 @@ const Page = async () => {
             otherClasses="min-h-[56px] sm:min-w-[170px]"
           />
         </div>
-        <div className="mt-12 flex w-full flex-wrap gap-4">
-          {result.users.map((user) => (
-            <UserCard user={user} key={user._id} />
-          ))}
-        </div>
+
+        {result.users.length <= 0 ? (
+          <div>
+            <div className="mt-36 flex w-full flex-col items-center justify-center">
+              <NoResult
+                title="No users found"
+                description="Try searching for something else"
+                link="/"
+                linkTitle="Go back home"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="mt-12 flex w-full flex-wrap gap-4">
+            {result.users.map((user) => (
+              <UserCard user={user} key={user._id} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
