@@ -14,7 +14,7 @@ import User from "@/database/user.model";
 import { revalidatePath } from "next/cache";
 import Answer from "@/database/answer.model";
 import Interaction from "@/database/interaction.model";
-import { FilterQuery } from "mongoose";
+import { FilterQuery, SortOrder } from "mongoose";
 
 export async function getQuestions(params: GetQuestionsParams) {
   try {
@@ -30,10 +30,37 @@ export async function getQuestions(params: GetQuestionsParams) {
       ];
     }
 
+    let sort = {};
+
+    if (filter) {
+      if (filter === "newest") {
+        sort = {
+          createdAt: -1,
+        };
+      } else if (filter === "recommended") {
+        sort = {};
+      } else if (filter === "frequent") {
+        sort = {
+          upvotes: -1,
+          views: -1,
+        };
+      } else if (filter === "unanswered") {
+        if (searchQuery) {
+          query.$or = [
+            { title: { $regex: new RegExp(searchQuery, `i`) } },
+            { content: { $regex: new RegExp(searchQuery, `i`) } },
+            { answers: { $size: 0 } },
+          ];
+        } else {
+          query.$or = [{ answers: { $size: 0 } }];
+        }
+      }
+    }
+
     const questions = await Question.find(query)
       .populate({ path: "tags", model: Tag })
       .populate({ path: "author", model: User })
-      .sort({ createdAt: -1 });
+      .sort(sort);
 
     return { questions };
   } catch (error) {
