@@ -60,6 +60,9 @@ export async function getAllUsers(params: GetAllUsersParams) {
         };
         break;
       case "top_contributors":
+        sort = {
+          reputation: -1,
+        };
         break;
       default:
         break;
@@ -165,7 +168,7 @@ export async function saveQuestion(params: ToggleSaveQuestionParams) {
 export async function getSavedQuestions(params: GetSavedQuestionsParams) {
   try {
     connectToDatabase();
-    const { searchQuery } = params;
+    const { searchQuery, filter } = params;
     const { clerkId } = params;
     const query: FilterQuery<typeof Question> = {};
     if (searchQuery) {
@@ -175,11 +178,43 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
       ];
     }
 
+    let sortOptions = {};
+
+    switch (filter) {
+      case "most_recent":
+        sortOptions = {
+          createdAt: -1,
+        };
+        break;
+      case "oldest":
+        sortOptions = {
+          createdAt: 1,
+        };
+        break;
+      case "most_voted":
+        sortOptions = {
+          upvotes: -1,
+        };
+        break;
+      case "most_viewed":
+        sortOptions = {
+          views: -1,
+        };
+        break;
+      case "most_answered":
+        sortOptions = {
+          answers: -1,
+        };
+        break;
+      default:
+        break;
+    }
+
     const user = await User.findOne({ clerkId }).populate({
       path: "saved",
       match: query,
       options: {
-        sort: { joinedAt: -1 },
+        sort: sortOptions,
       },
       populate: [
         { path: "tags", model: Tag, select: "_id name" },
