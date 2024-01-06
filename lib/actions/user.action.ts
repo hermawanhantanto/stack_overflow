@@ -46,7 +46,25 @@ export async function getAllUsers(params: GetAllUsersParams) {
       ];
     }
 
-    const users = await User.find(query).sort({ createdAt: -1 });
+    let sort = {};
+
+    switch (filter) {
+      case "new_users":
+        sort = {
+          joinedAt: -1,
+        };
+        break;
+      case "old_users":
+        sort = {
+          joinedAt: 1,
+        };
+        break;
+      case "top_contributors":
+        break;
+      default:
+        break;
+    }
+    const users = await User.find(query).sort(sort);
 
     return { users };
   } catch (error) {
@@ -157,11 +175,11 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
       ];
     }
 
-    const user = await User.findOne({clerkId}).populate({
+    const user = await User.findOne({ clerkId }).populate({
       path: "saved",
       match: query,
       options: {
-        sort: { createdAt: -1 },
+        sort: { joinedAt: -1 },
       },
       populate: [
         { path: "tags", model: Tag, select: "_id name" },
@@ -234,7 +252,7 @@ export async function getUserAnswers(params: GetUserStatsParams) {
       .populate({
         path: "question",
         model: Question,
-        select: "_id title createdAt",
+        select: "_id title joinedAt",
       })
       .populate({
         path: "author",

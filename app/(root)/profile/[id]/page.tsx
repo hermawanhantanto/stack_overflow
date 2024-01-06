@@ -16,7 +16,7 @@ const Page = async ({ params, searchParams }: URLProps) => {
   const userInfo = await getUserInfo({
     userId: params.id,
   });
-  console.log(userInfo);
+
   return (
     <>
       <div className="flex flex-col-reverse justify-between sm:flex-row ">
@@ -43,6 +43,7 @@ const Page = async ({ params, searchParams }: URLProps) => {
                   href={userInfo?.user.portofolioWebsite}
                 />
               )}
+
               {userInfo?.user.location && (
                 <ProfilInfo
                   imgUrl="/assets/icons/location.svg"
