@@ -6,10 +6,14 @@ import { AnswerFilters } from "@/constants/filters";
 
 interface Props {
   questionId: string;
+  filter: string;
 }
 
-const AllAnswers = async ({ questionId }: Props) => {
-  const result = await getAllAnswers({ questionId: JSON.parse(questionId) });
+const AllAnswers = async ({ questionId, filter }: Props) => {
+  const result = await getAllAnswers(
+    { questionId: JSON.parse(questionId), sortBy:  filter}
+    
+    );
   return (
     <div className="mt-8 flex w-full flex-col gap-12">
       <div className="mb-8 flex items-center justify-between">

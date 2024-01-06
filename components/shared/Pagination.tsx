@@ -2,6 +2,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { Button } from "../ui/button";
+import { formUrlQueryParams } from "@/lib/utils";
 
 interface Props {
   currentPage: number;
@@ -15,9 +16,13 @@ const Pagination = ({ currentPage, itemCount, pageSize }: Props) => {
   const pageCount = Math.ceil(itemCount / pageSize);
 
   const handleOnChange = (page: number) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("page", page.toString());
-    router.push("?" + params.toString());
+    const newUrl = formUrlQueryParams({
+      params: searchParams.toString(),
+      key: "page",
+      value:  page.toString()
+    })
+
+    router.push(newUrl)
   };
 
   return (

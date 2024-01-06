@@ -14,12 +14,12 @@ import User from "@/database/user.model";
 import { revalidatePath } from "next/cache";
 import Answer from "@/database/answer.model";
 import Interaction from "@/database/interaction.model";
-import { FilterQuery, SortOrder } from "mongoose";
+import { FilterQuery } from "mongoose";
 
 export async function getQuestions(params: GetQuestionsParams) {
   try {
     connectToDatabase();
-    const { page, pageSize, searchQuery, filter } = params;
+    const { page = 1, pageSize = 10, searchQuery, filter } = params;
 
     const query: FilterQuery<typeof Question> = {};
 
@@ -60,9 +60,13 @@ export async function getQuestions(params: GetQuestionsParams) {
     const questions = await Question.find(query)
       .populate({ path: "tags", model: Tag })
       .populate({ path: "author", model: User })
-      .sort(sort);
+      .sort(sort)
+      .skip((page - 1) * pageSize)
+      .limit(pageSize);
 
-    return { questions };
+    const total = await Question.countDocuments(query);
+
+    return { questions, total };
   } catch (error) {
     console.log(error);
     throw error;

@@ -42,7 +42,7 @@ const Filter = ({ filters, otherClasses, containerClasses }: Props) => {
         keysToRemove: ["filter"],
       });
 
-      router.push(newUrl);
+      router.push(newUrl, { scroll: false });
     }
   }, [pathname, filter, query, searchParams, router]);
 

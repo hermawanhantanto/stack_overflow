@@ -17,9 +17,12 @@ interface Props {
   params: {
     id: string;
   };
+  searchParams: {
+    filter: string;
+  };
 }
 
-const QuestionDetail = async ({ params }: Props) => {
+const QuestionDetail = async ({ params, searchParams }: Props) => {
   const { userId: clerkId } = auth();
 
   let user;
@@ -107,7 +110,10 @@ const QuestionDetail = async ({ params }: Props) => {
           <RenderTag key={tag.id} _id={tag._id} name={tag.name} />
         ))}
       </div>
-      <AllAnswers questionId={JSON.stringify(question._id)} />
+      <AllAnswers
+        questionId={JSON.stringify(question._id)}
+        filter={searchParams.filter}
+      />
       <Answer
         userId={JSON.stringify(user._id)}
         questionId={JSON.stringify(question._id)}
