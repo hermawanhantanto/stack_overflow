@@ -30,8 +30,8 @@ export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
 export async function getAllTags(params: GetAllTagsParams) {
   try {
     connectToDatabase();
-    const { page = 1, pageSize = 1, filter, searchQuery } = params;
-    
+    const { page = 1, pageSize = 10, filter, searchQuery } = params;
+
     const query: FilterQuery<typeof Tag> = {};
 
     if (searchQuery) {
@@ -64,8 +64,13 @@ export async function getAllTags(params: GetAllTagsParams) {
       default:
         break;
     }
-    const tags = await Tag.find(query).sort(sortOptions);
-    return { tags };
+    const tags = await Tag.find(query)
+      .sort(sortOptions)
+      .skip((page - 1) * pageSize)
+      .limit(pageSize);
+    const total = await Tag.countDocuments(query);
+
+    return { tags, total };
   } catch (error) {
     console.log(error);
     throw error;
@@ -77,7 +82,7 @@ export async function getQuestionsByTagIdParams(
 ) {
   try {
     connectToDatabase();
-    const { tagId, page = 1, pageSize = 20, searchQuery } = params;
+    const { tagId, page = 1, pageSize = 10, searchQuery } = params;
     const query: FilterQuery<typeof Question> = {};
     if (searchQuery) {
       query.$or = [
@@ -90,6 +95,8 @@ export async function getQuestionsByTagIdParams(
       match: query,
       options: {
         sort: { createdOn: -1 },
+        skip: (page - 1) * pageSize,
+        limit: pageSize,
       },
       populate: [
         { path: "tags", model: Tag, select: "_id name" },
@@ -97,10 +104,10 @@ export async function getQuestionsByTagIdParams(
       ],
     });
 
-    console.log(tags);
-
+    query.tags = tagId;
+    const total = await Question.countDocuments(query);
     const tagsQuestions = tags.questions;
-    return { questions: tagsQuestions };
+    return { questions: tagsQuestions, total };
   } catch (error) {
     console.log(error);
     throw error;

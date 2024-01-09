@@ -1,9 +1,9 @@
 import QuestionCard from "@/components/cards/QuestionCard";
-import HomeFilters from "@/components/home/HomeFilters";
 import Filter from "@/components/shared/Filter";
 import NoResult from "@/components/shared/NoResult";
+import Pagination from "@/components/shared/Pagination";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
-import { HomePageFilters, QuestionFilters } from "@/constants/filters";
+import { QuestionFilters } from "@/constants/filters";
 import { getSavedQuestions } from "@/lib/actions/user.action";
 import { SearchParamsProps } from "@/types";
 import { auth } from "@clerk/nextjs";
@@ -18,7 +18,8 @@ export default async function Collection({ searchParams }: SearchParamsProps) {
   const result = await getSavedQuestions({
     clerkId: userId,
     searchQuery: searchParams.q,
-    filter: searchParams.filter
+    filter: searchParams.filter,
+    page: searchParams.page ? +searchParams.page : 1,
   });
 
   return (
@@ -67,6 +68,14 @@ export default async function Collection({ searchParams }: SearchParamsProps) {
           />
         )}
       </div>
+      <div className="mt-12 flex w-full items-center justify-center">
+        <Pagination
+          currentPage={Number(searchParams.page) || 1}
+          itemCount={result.total}
+          pageSize={10}
+        />
+      </div>
+      
     </>
   );
 }

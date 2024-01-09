@@ -1,4 +1,5 @@
 import QuestionCard from "@/components/cards/QuestionCard";
+import Pagination from "@/components/shared/Pagination";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { getQuestionsByTagIdParams } from "@/lib/actions/tag.action";
 import { SearchParamsProps } from "@/types";
@@ -8,13 +9,17 @@ interface Props {
   params: {
     id: string;
   };
-  searchParams: SearchParamsProps;
+  searchParams: {
+    q: string;
+    page: string;
+  };
 }
 
 const Page = async ({ params, searchParams }: Props) => {
   const result = await getQuestionsByTagIdParams({
     tagId: params.id,
     searchQuery: searchParams.q,
+    page: searchParams.page ? +searchParams.page : 1,
   });
 
   return (
@@ -47,6 +52,13 @@ const Page = async ({ params, searchParams }: Props) => {
             createdAt={question.createdAt}
           />
         ))}
+      </div>
+      <div className="mt-12 flex items-center justify-center">
+        <Pagination
+          currentPage={searchParams.page ? +searchParams.page : 1}
+          itemCount={result.total}
+          pageSize={10}
+        />
       </div>
     </>
   );

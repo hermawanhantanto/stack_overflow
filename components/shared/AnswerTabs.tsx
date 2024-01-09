@@ -39,7 +39,7 @@ const AnswerTabs = async ({ userId, page }: Props) => {
             {/* If signed in add edit delete actions */}
 
             <SignedIn>
-                <DeleteAction id={JSON.stringify(answers._id)} type="answer" />
+              <DeleteAction id={JSON.stringify(answers._id)} type="answer" />
             </SignedIn>
           </div>
           <div className="flex-between mt-6 w-full flex-wrap gap-3">

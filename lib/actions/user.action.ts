@@ -67,9 +67,14 @@ export async function getAllUsers(params: GetAllUsersParams) {
       default:
         break;
     }
-    const users = await User.find(query).sort(sort);
 
-    return { users };
+    const users = await User.find(query)
+      .sort(sort)
+      .skip((page - 1) * pageSize)
+      .limit(pageSize);
+    const total = await User.countDocuments(query);
+
+    return { users, total };
   } catch (error) {
     console.log(error);
     throw error;
@@ -168,7 +173,7 @@ export async function saveQuestion(params: ToggleSaveQuestionParams) {
 export async function getSavedQuestions(params: GetSavedQuestionsParams) {
   try {
     connectToDatabase();
-    const { searchQuery, filter } = params;
+    const { searchQuery, filter, page = 1, pageSize = 10 } = params;
     const { clerkId } = params;
     const query: FilterQuery<typeof Question> = {};
     if (searchQuery) {
@@ -215,15 +220,20 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
       match: query,
       options: {
         sort: sortOptions,
+        skip: (page - 1) * pageSize,
+        limit: pageSize,
       },
       populate: [
         { path: "tags", model: Tag, select: "_id name" },
         { path: "author", model: User, select: "_id clerkId name picture" },
       ],
     });
+
+    query.author = user._id;
+    const total = await Question.countDocuments(query);
     if (!user) throw new Error("User not found");
     const savedQuestions = user.saved;
-    return { questions: savedQuestions };
+    return { questions: savedQuestions, total };
   } catch (error) {
     console.log(error);
     throw error;
@@ -287,7 +297,7 @@ export async function getUserAnswers(params: GetUserStatsParams) {
       .populate({
         path: "question",
         model: Question,
-        select: "_id title joinedAt",
+        select: "_id title createdAt",
       })
       .populate({
         path: "author",
