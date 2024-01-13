@@ -5,6 +5,7 @@ import { connectToDatabase } from "../mongoose";
 import { ViewQuestionParams } from "./shared.types";
 import Interaction from "@/database/interaction.model";
 
+
 export async function viewQuestion(params: ViewQuestionParams) {
   try {
     connectToDatabase();
@@ -16,7 +17,7 @@ export async function viewQuestion(params: ViewQuestionParams) {
         question: questionId,
         action: "view",
       });
-      console.log(interaction);
+
       if (interaction) return console.log("Already viewed");
 
       await Interaction.create({

@@ -164,3 +164,8 @@ export interface getQuestionsByUserIdParams {
   page?: number;
   pageSize?: number;
 }
+
+export interface ScoreCreateQuestionParams {
+  questionId: string;
+  userId: string;
+}

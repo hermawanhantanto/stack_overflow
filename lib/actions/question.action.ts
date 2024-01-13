@@ -127,9 +127,14 @@ export async function createQuestion(params: CreateQuestionParams) {
     });
 
     // Create an interaction record for the user's ask_question action
-
+    await Interaction.create({
+      user: author,
+      question: question._id,
+      action: "create-question",
+      tags: tagDocuments,
+    });
     // Increment author's reputation by +5 for creating a question
-
+    await User.findByIdAndUpdate(author, { $inc: { reputation: 5 } });
     revalidatePath(path);
   } catch (error) {}
 }
@@ -159,7 +164,16 @@ export async function upvoteQuestion(params: QuestionVoteParams) {
         new: true,
       }
     );
+
     if (!question) return;
+
+    await User.findByIdAndUpdate(userId, {
+      $inc: { reputation: hasupVoted ? -1 : 1 },
+    });
+
+    await User.findByIdAndUpdate(question.author, {
+      $inc: { reputation: hasupVoted ? -10 : 10 },
+    });
 
     revalidatePath(path);
   } catch (error) {
@@ -184,6 +198,12 @@ export async function downvoteQuestion(params: QuestionVoteParams) {
         { _id: question._id },
         { $push: { downvotes: userId } }
       );
+      if (question.author !== userId) {
+        await User.findByIdAndUpdate(question.author, {
+          $inc: { reputation: -2 },
+        });
+        await User.findByIdAndUpdate(userId, { $inc: { reputation: -1 } });
+      }
       return revalidatePath(path);
     }
 
@@ -192,6 +212,17 @@ export async function downvoteQuestion(params: QuestionVoteParams) {
         { _id: question._id },
         { $pull: { downvotes: userId } }
       );
+      if (question.author !== userId) {
+        await User.findByIdAndUpdate(question.author, {
+          $inc: { reputation: +2 },
+        });
+        await User.findByIdAndUpdate(userId, { $inc: { reputation: +1 } });
+        await Interaction.findOneAndRemove({
+          userId,
+          question: questionId,
+          action: "downvote-question",
+        });
+      }
       return revalidatePath(path);
     }
 
@@ -199,7 +230,17 @@ export async function downvoteQuestion(params: QuestionVoteParams) {
       { _id: question._id },
       { $push: { downvotes: userId } }
     );
-
+    if (question.author !== userId) {
+      await User.findByIdAndUpdate(question.author, {
+        $inc: { reputation: -2 },
+      });
+      await User.findByIdAndUpdate(userId, { $inc: { reputation: -1 } });
+      await Interaction.create({
+        userId,
+        question: questionId,
+        action: "downvote-question",
+      });
+    }
     revalidatePath(path);
   } catch (error) {
     console.log(error);
@@ -232,8 +273,6 @@ export async function deleteQuestion(params: DeleteQuestionParams) {
       { saved: { $in: [questionId] } },
       { $pull: { saved: questionId } }
     );
-
-    await Question.findByIdAndDelete({ _id: questionId });
 
     revalidatePath(path);
   } catch (error) {
